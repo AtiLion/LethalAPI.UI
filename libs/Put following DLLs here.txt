@@ -1,2 +1,3 @@
 Unity.TextMeshPro.dll
 UnityEngine.UI.dll
+Assembly-CSharp.dll

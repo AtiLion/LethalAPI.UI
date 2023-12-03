@@ -1,6 +1,8 @@
 ﻿using BepInEx;
 using LethalAPI.UI.Views;
 using System;
+using LethalAPI.UI.Menus;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace LethalAPI.UI
@@ -11,6 +13,9 @@ namespace LethalAPI.UI
         private const string SceneNameMainMenu = "MainMenu";
 
         private MainMenu _mainMenu;
+        private ModSettings _modSettings;
+
+        private MenuManager _gameMenuManager;
 
         private void Awake()
         {
@@ -31,24 +36,43 @@ namespace LethalAPI.UI
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            if (scene == null) return;
+            if (scene.name == SceneNameMainMenu)
+            {
+                _mainMenu = new MainMenu();
+                if (_mainMenu.SettingsPanel != null)
+                {
+                    _modSettings = new ModSettings(_mainMenu.SettingsPanel);
 
-            if (scene.name == SceneNameMainMenu) _mainMenu = new MainMenu();
+                    LethalCompanyMenu.OnMenuClose += (LethalCompanyMenu menu) =>
+                        _gameMenuManager.EnableUIPanel(_mainMenu.SettingsPanel.gameObject);
+                }
+
+                _gameMenuManager = GameObject.FindObjectOfType<MenuManager>();
+            }
         }
         private void OnSceneUnloaded(Scene scene)
         {
-            if (scene == null) return;
-
             if (scene.name == SceneNameMainMenu)
             {
-                _mainMenu.Dispose();
+                _mainMenu?.Dispose();
+                _modSettings?.Dispose();
+
                 _mainMenu = null;
+                _modSettings = null;
             }
         }
         
         private void CreateModSettings(MainMenu menu)
         {
-            menu.AddMenuButton("test", "Test", 2, () => { Console.WriteLine("This is a test"); });
+            if (menu.SetToDefaultButton == null) return;
+
+            Vector3 setToDefaultPosition = menu.SetToDefaultButton.transform.localPosition;
+            menu.AddSettingsButton("ModSettings", "> Mod Settings", 5, new Vector3(setToDefaultPosition.x, -127, setToDefaultPosition.z), () => {
+                if (_modSettings == null || _gameMenuManager == null) return;
+                
+                _gameMenuManager.DisableUIPanel(_mainMenu.SettingsPanel.gameObject);
+                _modSettings.Open();
+            });
         }
         private void OnMainMenuOpen(MainMenu menu)
         {

@@ -13,20 +13,32 @@ namespace LethalAPI.UI.Views
     {
         public static MainMenu Instance { get; private set; }
 
-        public GameObject MainMenuContainer => GameObject.Find("MenuContainer");
-        public GameObject MainMenuButtons => GameObject.Find("MainButtons");
-        public GameObject SettingsPanel => GameObject.Find("SettingsPanel");
+        public GameObject MainMenuContainer { get; }
+
+        public Transform MainMenuButtons { get; }
+        public Transform SettingsButton { get; }
+        
+        public Transform SettingsPanel { get; }
+        public Transform SetToDefaultButton { get; }
+        
         public bool IsValid => Instance != null && MainMenuContainer != null && MainMenuButtons != null;
 
         public MainMenu()
         {
             Instance = this;
-            OnMainMenuOpen(this);
+            
+            MainMenuContainer = GameObject.Find("MenuContainer");
+            MainMenuButtons = MainMenuContainer.transform.Find("MainButtons");
+            SettingsButton = MainMenuButtons.transform.Find("SettingsButton");
+            SettingsPanel = MainMenuContainer.transform.Find("SettingsPanel");
+            SetToDefaultButton = SettingsPanel.transform.Find("SetToDefault");
+            
+            OnMainMenuOpen?.Invoke(this);
         }
         public void Dispose()
         {
             Instance = null;
-            OnMainMenuClose();
+            OnMainMenuClose?.Invoke();
         }
 
         #region Handle opening and closing main menu events
@@ -41,18 +53,26 @@ namespace LethalAPI.UI.Views
             while (Instance == null) yield return null;
         }
         #endregion
-
-        public void AddMenuButton(MainMenuButton button, ushort position)
+        
+        public MenuButton AddMainMenuButton(string id, string text, ushort index, Vector3 position, Action onClick)
         {
-            if (!IsValid || button == null) return;
-
-            button.SetSiblingIndex(position);
-        }
-        public void AddMenuButton(string id, string text, ushort position, Action onClick)
-        {
-            MainMenuButton button = new MainMenuButton(this, id, text);
+            if (!IsValid || SettingsButton == null) return null;
+            
+            MenuButton button = new MenuButton(SettingsButton.gameObject, id, text);
             button.OnClick += onClick;
-            AddMenuButton(button, position);
+            button.SetSiblingIndex(index);
+            button.SetPosition(position);
+            return button;
+        }
+        public MenuButton AddSettingsButton(string id, string text, ushort index, Vector3 position, Action onClick)
+        {
+            if (!IsValid || SetToDefaultButton == null) return null;
+
+            MenuButton button = new MenuButton(SetToDefaultButton.gameObject, id, text);
+            button.OnClick += onClick;
+            button.SetSiblingIndex(index);
+            button.SetPosition(position);
+            return button;
         }
     }
 }

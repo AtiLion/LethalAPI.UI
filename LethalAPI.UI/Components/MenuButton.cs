@@ -4,60 +4,50 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using LethalAPI.UI.Views;
-using LethalAPI.UI.Exceptions;
-
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
 namespace LethalAPI.UI.Components
 {
-    public class MainMenuButton
+    public class MenuButton
     {
-        private const string SampleButtonId = "SettingsButton";
-
-        private MainMenu _mainMenu;
-
         public GameObject Root { get; private set; }
         public Button ButtonComponent { get; private set; }
         public TextMeshProUGUI TextComponent { get; private set; }
 
         public event Action OnClick;
 
-        public MainMenuButton(MainMenu menu, string id, string text)
+        public MenuButton(GameObject sampleButton, string id, string text)
         {
-            _mainMenu = menu;
-
-            GameObject sample = GameObject.Find(SampleButtonId);
-            if (sample == null) throw new SampleNotFoundException(SampleButtonId);
-
-            GameObject root = GameObject.Instantiate(sample, sample.transform.parent);
-            if (root == null) throw new Exception("Could not instantiate sample " + SampleButtonId);
+            if (sampleButton == null) throw new Exception("Sample button is null");
+            
+            GameObject root = GameObject.Instantiate(sampleButton, sampleButton.transform.parent);
+            if (root == null) throw new Exception("Could not instantiate sample " + sampleButton.name);
 
             Button buttonComponent = root.GetComponent<Button>();
             if (buttonComponent == null)
             {
                 GameObject.Destroy(root);
-                throw new Exception("Could not find Button for " + SampleButtonId);
+                throw new Exception("Could not find Button for " + sampleButton.name);
             }
 
             GameObject textGameObject = root.transform.GetChild(1)?.gameObject;
             if (textGameObject == null)
             {
                 GameObject.Destroy(root);
-                throw new Exception("Could not find text child for " + SampleButtonId);
+                throw new Exception("Could not find text child for " + sampleButton.name);
             }
 
             TextMeshProUGUI textComponent = textGameObject.GetComponent<TextMeshProUGUI>();
             if (textComponent == null)
             {
                 GameObject.Destroy(root);
-                throw new Exception("Could not find TextMeshProUGUI for " + SampleButtonId);
+                throw new Exception("Could not find TextMeshProUGUI for " + sampleButton.name);
             }
 
             root.name = id;
-            textComponent.text = "> " + text ?? "> Sample";
+            textComponent.text = text ?? "> Sample";
             buttonComponent.onClick = new Button.ButtonClickedEvent();
             buttonComponent.onClick.AddListener(() => OnClick?.Invoke());
 
